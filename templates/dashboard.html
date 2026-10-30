@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Welcome Header -->
+  <div class="dashboard-header mb-4">
+    <div class="row align-items-center">
+      <div class="col">
+        <h2 class="fw-bold mb-1">Welcome back, {{ session.user_name.split()[0] }}! 👋</h2>
+        <p class="text-muted mb-0">Track your interview performance and keep improving.</p>
+      </div>
+      <div class="col-auto">
+        <a href="{{ url_for('new_interview') }}" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold">
+          <i class="bi bi-plus-circle me-2"></i>New Interview
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-camera-video"></i></div>
+        <div class="stat-value">{{ total_interviews }}</div>
+        <div class="stat-label">Total Interviews</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-trophy"></i></div>
+        <div class="stat-value">{{ avg_score }}%</div>
+        <div class="stat-label">Average Score</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-star-fill"></i></div>
+        <div class="stat-value text-truncate small fw-bold">{{ strongest_area }}</div>
+        <div class="stat-label">Strongest Area</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-arrow-up-circle"></i></div>
+        <div class="stat-value text-truncate small fw-bold">{{ weakest_area }}</div>
+        <div class="stat-label">Needs Work</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Recent Interviews -->
+    <div class="col-lg-8">
+      <div class="content-card">
+        <div class="content-card-header d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Interviews</h5>
+          <a href="{{ url_for('new_interview') }}" class="btn btn-sm btn-outline-primary rounded-pill">+ New</a>
+        </div>
+        <div class="content-card-body">
+          {% if interviews %}
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th class="fw-semibold">Company / Role</th>
+                    <th class="fw-semibold">Date</th>
+                    <th class="fw-semibold">Score</th>
+                    <th class="fw-semibold">Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for iv in interviews %}
+                  <tr>
+                    <td>
+                      <div class="fw-semibold">{{ iv.company_name }}</div>
+                      <small class="text-muted">{{ iv.job_role }}</small>
+                    </td>
+                    <td class="text-muted small">{{ iv.interview_date[:10] }}</td>
+                    <td>
+                      {% if iv.overall_score %}
+                        <span class="badge rounded-pill
+                          {% if iv.overall_score >= 75 %}bg-success
+                          {% elif iv.overall_score >= 50 %}bg-warning text-dark
+                          {% else %}bg-danger{% endif %}
+                        ">
+                          {{ "%.0f"|format(iv.overall_score) }}%
+                        </span>
+                      {% else %}
+                        <span class="text-muted small">—</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="badge rounded-pill {% if iv.status == 'completed' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                        {{ iv.status|capitalize }}
+                      </span>
+                    </td>
+                    <td>
+                      {% if iv.status == 'completed' %}
+                        <a href="{{ url_for('results', interview_id=iv.id) }}" class="btn btn-sm btn-outline-primary rounded-2">
+                          <i class="bi bi-bar-chart me-1"></i>Results
+                        </a>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <i class="bi bi-camera-video text-muted" style="font-size:3rem;"></i>
+              <h6 class="mt-3 fw-semibold">No Interviews Yet</h6>
+              <p class="text-muted small">Start your first mock interview to track your progress.</p>
+              <a href="{{ url_for('new_interview') }}" class="btn btn-primary btn-sm rounded-3">
+                <i class="bi bi-play-circle me-1"></i>Start Interview
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="col-lg-4">
+      <div class="content-card mb-3">
+        <div class="content-card-header">
+          <h5 class="fw-bold mb-0"><i class="bi bi-person-circle me-2 text-primary"></i>Profile</h5>
+        </div>
+        <div class="content-card-body text-center">
+          <div class="avatar-circle mx-auto mb-3">
+            {{ session.user_name[0].upper() }}
+          </div>
+          <h6 class="fw-bold mb-1">{{ session.user_name }}</h6>
+          <p class="text-muted small mb-3">{{ session.user_email }}</p>
+          <div class="row g-2 text-center">
+            <div class="col-6">
+              <div class="mini-stat">
+                <div class="fw-bold text-primary">{{ total_interviews }}</div>
+                <small class="text-muted">Interviews</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="mini-stat">
+                <div class="fw-bold text-success">{{ avg_score }}%</div>
+                <small class="text-muted">Avg Score</small>
+              </div>
+            </div>
+          </div>
+          <a href="{{ url_for('profile') }}" class="btn btn-outline-primary btn-sm w-100 mt-3 rounded-3">
+            View Full Profile
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Tips -->
+      <div class="content-card">
+        <div class="content-card-header">
+          <h5 class="fw-bold mb-0"><i class="bi bi-lightbulb me-2 text-warning"></i>Quick Tips</h5>
+        </div>
+        <div class="content-card-body">
+          <ul class="list-unstyled mb-0">
+            <li class="mb-2 d-flex align-items-start gap-2">
+              <i class="bi bi-check-circle-fill text-success mt-1 flex-shrink-0"></i>
+              <small>Use the <strong>STAR method</strong> for behavioral questions.</small>
+            </li>
+            <li class="mb-2 d-flex align-items-start gap-2">
+              <i class="bi bi-check-circle-fill text-success mt-1 flex-shrink-0"></i>
+              <small>Answer technical questions with <strong>examples</strong>.</small>
+            </li>
+            <li class="mb-2 d-flex align-items-start gap-2">
+              <i class="bi bi-check-circle-fill text-success mt-1 flex-shrink-0"></i>
+              <small>Practice <strong>out loud</strong> before the real interview.</small>
+            </li>
+            <li class="d-flex align-items-start gap-2">
+              <i class="bi bi-check-circle-fill text-success mt-1 flex-shrink-0"></i>
+              <small>Research the <strong>company</strong> before applying.</small>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

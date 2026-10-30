@@ -1,0 +1,88 @@
+📥 STEP 1 — Download & Install These Software
+1️⃣ Python (Most Important)
+
+Go to 👉 https://www.python.org/downloads/
+Download Python 3.11 (recommended)
+During install → ✅ CHECK "Add Python to PATH" (very important!)
+Click Install Now
+
+2️⃣ VS Code
+
+Go to 👉 https://code.visualstudio.com/
+Download and install normally
+
+3️⃣ Git (Optional but good to have)
+
+Go to 👉 https://git-scm.com/downloads
+Download and install normally
+
+
+🔌 STEP 2 — Install VS Code Extensions
+Open VS Code → Press Ctrl + Shift + X → Search and install these:
+ExtensionWhyPython (by Microsoft)Run Python filesPylance (by Microsoft)Python autocompleteHTML CSS SupportFor templatesSQLite ViewerSee your database
+
+📁 STEP 3 — Copy Your Project
+
+Copy your ai_interview_coach folder to the new laptop
+OR download the ZIP and extract it
+
+
+💻 STEP 4 — Open Project in VS Code
+1. Open VS Code
+2. Click File → Open Folder
+3. Select your ai_interview_coach folder
+4. Click Select Folder
+
+⚡ STEP 5 — Open Terminal in VS Code
+Press Ctrl + ` (backtick key, below Esc)
+
+📦 STEP 6 — Install Python Packages
+Type this ONE command in terminal:
+bashpip install -r requirements.txt
+Wait for it to finish. You'll see packages installing.
+If pip doesn't work, try:
+bashpip3 install -r requirements.txt
+
+🔑 STEP 7 — Setup .env File
+Open the .env file in your project and it looks like this:
+SECRET_KEY=ai-interview-coach-super-secret-key-2024
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+MAIL_USERNAME=your_gmail@gmail.com
+MAIL_PASSWORD=your_gmail_app_password
+For now just leave it as is — the app works without Gemini API key too (uses demo questions).
+
+🚀 STEP 8 — Run the App
+bashpython app.py
+You'll see this in terminal:
+==================================================
+  AI Interview Coach - Starting...
+  URL: http://127.0.0.1:5000
+  Admin: admin@example.com / admin123
+==================================================
+
+🌐 STEP 9 — Open in Browser
+Open Chrome or any browser and go to:
+http://127.0.0.1:5000
+Done! Your app is running! 🎉
+
+🆘 Common Errors & Fixes
+ErrorFixpip not recognizedReinstall Python with ✅ Add to PATH checkedNo module named flaskRun pip install flask manuallyPort 5000 already in useChange port in app.py to port=5001Python not recognizedRestart VS Code after installing PythonModuleNotFoundErrorRun pip install -r requirements.txt again
+
+📋 Full Command Summary (Copy & Use)
+bash# Step 1 - Install all packages
+pip install -r requirements.txt
+
+# Step 2 - Run the app
+python app.py
+
+# If above doesn't work, try
+python3 app.py
+
+🎯 What You Need — Quick Checklist
+✅ Python 3.11 installed (with Add to PATH checked)
+✅ VS Code installed
+✅ Python extension in VS Code
+✅ Your project folder copied
+✅ pip install -r requirements.txt done
+✅ python app.py running
+✅ http://127.0.0.1:5000 opened in browser
