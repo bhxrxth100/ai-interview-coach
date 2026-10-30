@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Register - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="auth-card">
+          <div class="text-center mb-4">
+            <div class="auth-logo mb-3">
+              <i class="bi bi-person-plus-fill"></i>
+            </div>
+            <h2 class="fw-bold">Create Account</h2>
+            <p class="text-muted">Start your interview prep journey</p>
+          </div>
+
+          <form method="POST" id="registerForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Full Name</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                <input type="text" class="form-control" name="name" placeholder="John Doe" required minlength="2" />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Email Address</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+                <input type="email" class="form-control" name="email" placeholder="john@example.com" required />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
+                <input type="password" class="form-control" name="password" id="regPassword" placeholder="Min 6 characters" required minlength="6" />
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('regPassword', 'eyeReg')">
+                  <i class="bi bi-eye" id="eyeReg"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Confirm Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock-fill text-muted"></i></span>
+                <input type="password" class="form-control" name="confirm_password" id="confirmPassword" placeholder="Repeat password" required />
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmPassword', 'eyeConfirm')">
+                  <i class="bi bi-eye" id="eyeConfirm"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="d-grid mb-3">
+              <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold">
+                <i class="bi bi-send me-2"></i>Send OTP & Register
+              </button>
+            </div>
+          </form>
+
+          <div class="text-center text-muted small">
+            Already have an account?
+            <a href="{{ url_for('login') }}" class="text-primary fw-semibold">Login here</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

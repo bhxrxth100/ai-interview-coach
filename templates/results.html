@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+{% block title %}Interview Results - AI Interview Coach{% endblock %}
+
+{% block extra_css %}
+<style>
+  .results-hero {
+    background: linear-gradient(135deg, #f0f7ff, #ffffff);
+    border-bottom: 1px solid #e8ecf0;
+    padding: 40px 0;
+  }
+  .score-circle {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    margin: 0 auto;
+    font-weight: 800;
+    position: relative;
+  }
+  .score-circle-inner {
+    width: 110px; height: 110px;
+    background: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  .score-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+  .score-label { font-size: 11px; color: #9ca3af; }
+  .metric-card {
+    background: white;
+    border: 1px solid #e8ecf0;
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .metric-card:hover { transform: translateY(-2px); }
+  .metric-score { font-size: 2rem; font-weight: 800; }
+  .area-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 18px;
+    border-radius: 50px;
+    font-weight: 600; font-size: 14px;
+  }
+  .suggestion-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .suggestion-item:last-child { border-bottom: none; }
+  .qa-item {
+    background: #f8faff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid #1a73e8;
+  }
+  .qa-item .question { font-weight: 600; color: #0d1117; margin-bottom: 8px; }
+  .qa-item .answer { color: #4b5563; font-size: 14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Results Hero -->
+<div class="results-hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Results</li>
+          </ol>
+        </nav>
+        <h2 class="fw-bold mb-1">Interview Results</h2>
+        <p class="text-muted mb-0">
+          <i class="bi bi-building me-1"></i>{{ interview.company_name }} &nbsp;•&nbsp;
+          <i class="bi bi-briefcase me-1"></i>{{ interview.job_role }} &nbsp;•&nbsp;
+          <i class="bi bi-calendar3 me-1"></i>{{ interview.interview_date[:10] }}
+        </p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="{{ url_for('new_interview') }}" class="btn btn-primary rounded-3">
+          <i class="bi bi-plus-circle me-2"></i>Practice Again
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary rounded-3 ms-2">
+          <i class="bi bi-grid me-1"></i>Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container py-4">
+
+  <!-- Score Cards Row -->
+  <div class="row g-3 mb-4">
+    <!-- Overall Score -->
+    <div class="col-md-3">
+      <div class="metric-card border-primary" style="border-width:2px!important;">
+        {% set ov = result.overall_score|float %}
+        <div class="metric-score text-primary">{{ "%.0f"|format(ov) }}<small style="font-size:1rem;">%</small></div>
+        <div class="text-muted small fw-semibold mt-1">Overall Score</div>
+        <div class="progress mt-2" style="height:5px;">
+          <div class="progress-bar bg-primary" style="width:{{ ov }}%"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Technical -->
+    <div class="col-md-3">
+      <div class="metric-card">
+        {% set ts = result.technical_score|float %}
+        <div class="metric-score text-info">{{ "%.0f"|format(ts) }}<small style="font-size:1rem;">%</small></div>
+        <div class="text-muted small fw-semibold mt-1">Technical</div>
+        <div class="progress mt-2" style="height:5px;">
+          <div class="progress-bar bg-info" style="width:{{ ts }}%"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Communication -->
+    <div class="col-md-3">
+      <div class="metric-card">
+        {% set cs = result.communication_score|float %}
+        <div class="metric-score text-success">{{ "%.0f"|format(cs) }}<small style="font-size:1rem;">%</small></div>
+        <div class="text-muted small fw-semibold mt-1">Communication</div>
+        <div class="progress mt-2" style="height:5px;">
+          <div class="progress-bar bg-success" style="width:{{ cs }}%"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Confidence -->
+    <div class="col-md-3">
+      <div class="metric-card">
+        {% set conf = result.confidence_score|float %}
+        <div class="metric-score text-warning">{{ "%.0f"|format(conf) }}<small style="font-size:1rem;">%</small></div>
+        <div class="text-muted small fw-semibold mt-1">Confidence</div>
+        <div class="progress mt-2" style="height:5px;">
+          <div class="progress-bar bg-warning" style="width:{{ conf }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Strongest / Weakest -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="content-card">
+        <div class="content-card-body d-flex align-items-center gap-3">
+          <div class="feature-icon bg-success-subtle text-success" style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">
+            <i class="bi bi-star-fill"></i>
+          </div>
+          <div>
+            <div class="text-muted small fw-semibold">Strongest Area</div>
+            <div class="fw-bold fs-5 text-success">{{ result.strongest_area }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="content-card">
+        <div class="content-card-body d-flex align-items-center gap-3">
+          <div class="feature-icon bg-danger-subtle text-danger" style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">
+            <i class="bi bi-arrow-up-circle-fill"></i>
+          </div>
+          <div>
+            <div class="text-muted small fw-semibold">Area to Improve</div>
+            <div class="fw-bold fs-5 text-danger">{{ result.weakest_area }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="content-card h-100">
+        <div class="content-card-header">
+          <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Score Breakdown</h5>
+        </div>
+        <div class="content-card-body">
+          <canvas id="scoreChart" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="content-card h-100">
+        <div class="content-card-header">
+          <h5 class="fw-bold mb-0"><i class="bi bi-pie-chart-fill me-2 text-success"></i>Performance Radar</h5>
+        </div>
+        <div class="content-card-body">
+          <canvas id="radarChart" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Feedback -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-12">
+      <div class="content-card">
+        <div class="content-card-header">
+          <h5 class="fw-bold mb-0"><i class="bi bi-stars me-2 text-warning"></i>AI Feedback</h5>
+        </div>
+        <div class="content-card-body">
+          <div class="alert alert-primary rounded-3 mb-0">
+            <i class="bi bi-robot me-2"></i>{{ result.feedback }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Suggestions Row -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="content-card h-100">
+        <div class="content-card-header">
+          <h5 class="fw-bold mb-0"><i class="bi bi-arrow-up-circle me-2 text-primary"></i>Improvement Tips</h5>
+        </div>
+        <div class="content-card-body">
+          {% for tip in improvement_suggestions %}
+          <div class="suggestion-item">
+            <i class="bi bi-check2-circle text-primary flex-shrink-0 mt-1"></i>
+            <span class="small">{{ tip }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="content-card h-100">
+        <div class="content-card-header">
+          <h5 class="fw-bold mb-0"><i class="bi bi-book me-2 text-success"></i>Study Topics</h5>
+        </div>
+        <div class="content-card-body">
+          {% for topic in recommended_topics %}
+          <div class="suggestion-item">
+            <i class="bi bi-bookmark-fill text-success flex-shrink-0 mt-1"></i>
+            <span class="small">{{ topic }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="content-card h-100">
+        <div class="content-card-header">
+          <h5 class="fw-bold mb-0"><i class="bi bi-chat-dots me-2 text-warning"></i>Communication Tips</h5>
+        </div>
+        <div class="content-card-body">
+          {% for tip in communication_tips %}
+          <div class="suggestion-item">
+            <i class="bi bi-mic-fill text-warning flex-shrink-0 mt-1"></i>
+            <span class="small">{{ tip }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q&A Review -->
+  {% if qa_list %}
+  <div class="content-card mb-4">
+    <div class="content-card-header d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold mb-0"><i class="bi bi-chat-left-text me-2 text-primary"></i>Question & Answer Review</h5>
+      <button class="btn btn-sm btn-outline-secondary rounded-pill" data-bs-toggle="collapse" data-bs-target="#qaCollapse">
+        Toggle
+      </button>
+    </div>
+    <div class="collapse show" id="qaCollapse">
+      <div class="content-card-body">
+        {% for qa in qa_list %}
+        <div class="qa-item" style="border-left-color: {% if qa.question_type == 'Technical' %}#1a73e8{% elif qa.question_type == 'HR' %}#10b981{% elif qa.question_type == 'Behavioral' %}#f59e0b{% elif qa.question_type == 'Situational' %}#7c3aed{% else %}#ef4444{% endif %};">
+          <div class="d-flex justify-content-between mb-1">
+            <span class="badge bg-secondary-subtle text-secondary rounded-pill small">{{ qa.question_type }}</span>
+            <span class="text-muted small">Q{{ qa.question_number }}</span>
+          </div>
+          <div class="question">{{ qa.question }}</div>
+          <div class="answer">
+            {% if qa.answer %}
+              <i class="bi bi-chat-right-text me-1 text-muted"></i>{{ qa.answer }}
+            {% else %}
+              <span class="text-danger"><i class="bi bi-dash-circle me-1"></i>No answer provided</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const techScore = {{ result.technical_score|float }};
+const commScore = {{ result.communication_score|float }};
+const confScore = {{ result.confidence_score|float }};
+const overallScore = {{ result.overall_score|float }};
+
+// Bar Chart
+const barCtx = document.getElementById('scoreChart').getContext('2d');
+new Chart(barCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Technical', 'Communication', 'Confidence', 'Overall'],
+    datasets: [{
+      label: 'Score (%)',
+      data: [techScore, commScore, confScore, overallScore],
+      backgroundColor: [
+        'rgba(26,115,232,0.8)',
+        'rgba(16,185,129,0.8)',
+        'rgba(245,158,11,0.8)',
+        'rgba(124,58,237,0.8)'
+      ],
+      borderColor: ['#1a73e8','#10b981','#f59e0b','#7c3aed'],
+      borderWidth: 2,
+      borderRadius: 8,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, max: 100, grid: { color: '#f0f0f0' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// Radar Chart
+const radarCtx = document.getElementById('radarChart').getContext('2d');
+new Chart(radarCtx, {
+  type: 'radar',
+  data: {
+    labels: ['Technical', 'Communication', 'Confidence', 'Clarity', 'Depth'],
+    datasets: [{
+      label: 'Your Performance',
+      data: [techScore, commScore, confScore,
+             Math.round((commScore + confScore) / 2),
+             Math.round((techScore + commScore) / 2)],
+      backgroundColor: 'rgba(26,115,232,0.15)',
+      borderColor: '#1a73e8',
+      borderWidth: 2,
+      pointBackgroundColor: '#1a73e8',
+      pointRadius: 5,
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      r: { beginAtZero: true, max: 100, ticks: { stepSize: 20 }, grid: { color: '#f0f0f0' } }
+    },
+    plugins: { legend: { display: false } }
+  }
+});
+</script>
+{% endblock %}
