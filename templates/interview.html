@@ -98,6 +98,16 @@
           <small class="text-muted fw-semibold">Question {{ question_num }} of {{ total_questions }}</small>
         </div>
 
+        {% if ai_warning %}
+        <div class="alert alert-warning alert-dismissible fade show rounded-3 shadow-sm d-flex align-items-center mb-4" role="alert">
+          <i class="bi bi-exclamation-triangle-fill fs-5 me-3 text-warning"></i>
+          <div>
+            <strong>Notice:</strong> {{ ai_warning }}
+          </div>
+          <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+
         <!-- Main Card -->
         <div class="question-card">
           <!-- Header -->

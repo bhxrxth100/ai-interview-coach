@@ -27,6 +27,9 @@ from models import (
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Ensure database tables exist on startup
+init_db()
+
 mail = Mail(app)
 
 # ─────────────────────────────────────────────
@@ -34,12 +37,25 @@ mail = Mail(app)
 # ─────────────────────────────────────────────
 try:
     import google.generativeai as genai
-    genai.configure(api_key=Config.GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
-    GEMINI_AVAILABLE = True
-except Exception as e:
-    print(f"Gemini not available: {e}")
-    GEMINI_AVAILABLE = False
+    from google.api_core import exceptions as google_exceptions
+    GEMINI_SDK_AVAILABLE = True
+except ImportError:
+    genai = None
+    google_exceptions = None
+    GEMINI_SDK_AVAILABLE = False
+
+gemini_model = None
+GEMINI_AVAILABLE = False
+
+if GEMINI_SDK_AVAILABLE and Config.GEMINI_API_KEY and Config.GEMINI_API_KEY != 'YOUR_GEMINI_API_KEY_HERE':
+    try:
+        genai.configure(api_key=Config.GEMINI_API_KEY)
+        gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+        GEMINI_AVAILABLE = True
+    except Exception as e:
+        print(f"Failed to initialize Gemini model: {e}")
+        gemini_model = None
+        GEMINI_AVAILABLE = False
 
 # ─────────────────────────────────────────────
 # Helper functions
@@ -94,15 +110,40 @@ def admin_required(f):
     return decorated
 
 def gemini_generate(prompt):
-    """Call Gemini API with fallback to demo data."""
-    if GEMINI_AVAILABLE and Config.GEMINI_API_KEY != 'YOUR_GEMINI_API_KEY_HERE':
-        try:
-            response = gemini_model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            print(f"Gemini error: {e}")
-    # Fallback - return None to use demo data
-    return None
+    """
+    Call Gemini API with robust error handling for rate limits,
+    quota exhaustion, timeouts, and API errors, returning (text, error_message).
+    """
+    if not GEMINI_AVAILABLE or not gemini_model:
+        return None, "Gemini API key is not configured or SDK is unavailable."
+
+    try:
+        response = gemini_model.generate_content(prompt)
+        if response and response.text:
+            return response.text, None
+        return None, "Empty response received from Gemini API."
+    except Exception as e:
+        error_msg = str(e)
+        if google_exceptions and isinstance(e, google_exceptions.ResourceExhausted):
+            user_msg = "Gemini API rate limit or quota exceeded. Using verified offline interview questions."
+            print(f"[Gemini Rate Limit]: {e}")
+        elif google_exceptions and isinstance(e, google_exceptions.DeadlineExceeded):
+            user_msg = "Gemini API request timed out. Using verified offline interview questions."
+            print(f"[Gemini Timeout]: {e}")
+        elif google_exceptions and isinstance(e, google_exceptions.PermissionDenied):
+            user_msg = "Gemini API authentication failed (invalid API key). Using verified offline interview questions."
+            print(f"[Gemini Auth Error]: {e}")
+        elif google_exceptions and isinstance(e, google_exceptions.GoogleAPIError):
+            user_msg = f"Gemini API error ({type(e).__name__}). Using verified offline interview questions."
+            print(f"[Gemini GoogleAPIError]: {e}")
+        elif "ResourceExhausted" in error_msg or "429" in error_msg or "quota" in error_msg.lower():
+            user_msg = "Gemini API rate limit or quota exceeded. Using verified offline interview questions."
+            print(f"[Gemini Rate Limit]: {e}")
+        else:
+            user_msg = "AI generation temporarily unavailable. Using verified offline interview questions."
+            print(f"[Gemini Error]: {e}")
+
+        return None, user_msg
 
 # ─────────────────────────────────────────────
 # Landing Page
@@ -376,18 +417,22 @@ def new_interview():
         )
 
         # Generate questions with Gemini
-        questions = generate_interview_questions(job_role, job_description, resume_text)
+        questions, warning_msg = generate_interview_questions(job_role, job_description, resume_text)
         session['interview_id'] = interview_id
         session['questions'] = questions
         session['current_q'] = 0
         session['answers'] = []
+        if warning_msg:
+            session['ai_warning'] = warning_msg
+        else:
+            session.pop('ai_warning', None)
 
         return redirect(url_for('interview_session'))
 
     return render_template('interview_setup.html')
 
 def generate_interview_questions(job_role, job_description, resume_text):
-    """Generate interview questions using Gemini AI."""
+    """Generate interview questions using Gemini AI with fallback safeguards."""
     prompt = f"""
 You are an expert technical interviewer. Generate exactly 10 interview questions for the following role.
 
@@ -421,11 +466,10 @@ Return ONLY a JSON array in this exact format, no markdown, no explanation:
   {{"type": "Project", "question": "..."}}
 ]
 """
-    response = gemini_generate(prompt)
+    response, error_msg = gemini_generate(prompt)
 
     if response:
         try:
-            # Strip markdown code fences if present
             clean = response.strip()
             if clean.startswith('```'):
                 clean = clean.split('```')[1]
@@ -433,12 +477,12 @@ Return ONLY a JSON array in this exact format, no markdown, no explanation:
                     clean = clean[4:]
             questions = json.loads(clean.strip())
             if isinstance(questions, list) and len(questions) > 0:
-                return questions
+                return questions, None
         except Exception as e:
             print(f"Question parse error: {e}")
+            error_msg = "Could not parse AI response. Using verified offline interview questions."
 
-    # Fallback demo questions
-    return [
+    fallback_questions = [
         {"type": "Technical", "question": f"Explain the core technical concepts required for a {job_role} role."},
         {"type": "Technical", "question": f"How would you approach debugging a critical production issue as a {job_role}?"},
         {"type": "Technical", "question": "Describe the architecture of a scalable system you have worked on or would design."},
@@ -450,6 +494,7 @@ Return ONLY a JSON array in this exact format, no markdown, no explanation:
         {"type": "Situational", "question": "How would you handle it if you disagreed with your manager's technical decision?"},
         {"type": "Project", "question": "Walk me through the most challenging project you have worked on and your specific contributions."},
     ]
+    return fallback_questions, error_msg
 
 # ─────────────────────────────────────────────
 # Interview Session
@@ -474,7 +519,8 @@ def interview_session():
                            question=current_question,
                            question_num=current_q + 1,
                            total_questions=total_q,
-                           interview_id=session['interview_id'])
+                           interview_id=session['interview_id'],
+                           ai_warning=session.get('ai_warning'))
 
 @app.route('/interview/answer', methods=['POST'])
 @login_required
@@ -582,7 +628,7 @@ Evaluate and return ONLY a JSON object (no markdown, no explanation) with these 
 
 Be fair but realistic. If answers are blank/poor, give low scores. Be specific in feedback.
 """
-    response = gemini_generate(prompt)
+    response, error_msg = gemini_generate(prompt)
 
     if response:
         try:
