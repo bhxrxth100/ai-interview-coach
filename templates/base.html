@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}AI Interview Coach{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('index') }}{% endif %}">
+      <div class="brand-icon">
+        <i class="bi bi-stars"></i>
+      </div>
+      <span>AI Interview <span class="text-primary">Coach</span></span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-1">
+        {% if session.get('is_admin') %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_panel') }}"><i class="bi bi-shield-check me-1"></i>Admin</a></li>
+          <li class="nav-item"><a class="btn btn-outline-danger btn-sm ms-2" href="{{ url_for('admin_logout') }}"><i class="bi bi-box-arrow-right me-1"></i>Logout</a></li>
+        {% elif session.get('user_id') %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}"><i class="bi bi-grid me-1"></i>Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('new_interview') }}"><i class="bi bi-play-circle me-1"></i>New Interview</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}"><i class="bi bi-person-circle me-1"></i>Profile</a></li>
+          <li class="nav-item"><a class="btn btn-outline-primary btn-sm ms-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-1"></i>Logout</a></li>
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
+          <li class="nav-item"><a class="btn btn-outline-primary btn-sm ms-2" href="{{ url_for('login') }}">Login</a></li>
+          <li class="nav-item"><a class="btn btn-primary btn-sm ms-2" href="{{ url_for('register') }}">Get Started</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Flash Messages -->
+<div class="container mt-3">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+          <i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'danger' %}x-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<!-- Main Content -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="footer-section mt-5 py-4 border-top bg-white">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-6 text-center text-md-start">
+        <span class="fw-semibold text-primary"><i class="bi bi-stars me-1"></i>AI Interview Coach</span>
+        <span class="text-muted ms-2">— Your career prep partner</span>
+      </div>
+      <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
+        <small class="text-muted">© 2024 AI Interview Coach. College Mini Project.</small>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

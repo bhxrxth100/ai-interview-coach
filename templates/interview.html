@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}Interview Session - AI Interview Coach{% endblock %}
+
+{% block extra_css %}
+<style>
+  .interview-container {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    align-items: center;
+    padding: 40px 0;
+  }
+  .question-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+    border: 1px solid #e8ecf0;
+    overflow: hidden;
+  }
+  .question-header {
+    background: linear-gradient(135deg, #1a73e8, #0d47a1);
+    padding: 24px 32px;
+    color: white;
+  }
+  .type-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white;
+  }
+  .timer-display {
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 8px 18px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-family: 'DM Mono', monospace;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .timer-display.warning { background: rgba(255,193,7,0.3); border-color: rgba(255,193,7,0.6); }
+  .timer-display.danger { background: rgba(220,53,69,0.3); border-color: rgba(220,53,69,0.6); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+  .question-body { padding: 32px; }
+  .question-number {
+    font-size: 13px; font-weight: 600; color: #6b7280;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+  }
+  .question-text {
+    font-size: 1.2rem; font-weight: 600; color: #0d1117; line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .answer-area {
+    background: #f8faff;
+    border: 2px solid #e8ecf0;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 15px;
+    resize: vertical;
+    min-height: 160px;
+    transition: border-color 0.2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    width: 100%;
+  }
+  .answer-area:focus {
+    outline: none;
+    border-color: #1a73e8;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(26,115,232,0.1);
+  }
+  .progress-dots { display: flex; gap: 6px; flex-wrap: wrap; }
+  .progress-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #e8ecf0; transition: all 0.3s;
+  }
+  .progress-dot.active { background: #1a73e8; }
+  .progress-dot.done { background: #10b981; }
+  .char-count { font-size: 12px; color: #9ca3af; text-align: right; margin-top: 6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="interview-container">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+
+        <!-- Progress Bar -->
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+          <div class="progress-dots" id="progressDots">
+            {% for i in range(total_questions) %}
+              <div class="progress-dot {% if i < question_num - 1 %}done{% elif i == question_num - 1 %}active{% endif %}" id="dot-{{ i }}"></div>
+            {% endfor %}
+          </div>
+          <small class="text-muted fw-semibold">Question {{ question_num }} of {{ total_questions }}</small>
+        </div>
+
+        {% if ai_warning %}
+        <div class="alert alert-warning alert-dismissible fade show rounded-3 shadow-sm d-flex align-items-center mb-4" role="alert">
+          <i class="bi bi-exclamation-triangle-fill fs-5 me-3 text-warning"></i>
+          <div>
+            <strong>Notice:</strong> {{ ai_warning }}
+          </div>
+          <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+
+        <!-- Main Card -->
+        <div class="question-card">
+          <!-- Header -->
+          <div class="question-header">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="type-badge">{{ question.type }}</span>
+                <h5 class="mt-2 mb-0 fw-bold">Mock Interview</h5>
+              </div>
+              <div class="text-end">
+                <div class="timer-display" id="timerDisplay">3:00</div>
+                <small class="opacity-75 mt-1 d-block">Time remaining</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="question-body">
+            <div class="question-number">Question {{ question_num }}</div>
+            <div class="question-text">{{ question.question }}</div>
+
+            <form method="POST" action="{{ url_for('submit_answer') }}" id="answerForm">
+              <label class="form-label fw-semibold text-muted small text-uppercase">Your Answer</label>
+              <textarea
+                class="answer-area"
+                name="answer"
+                id="answerText"
+                placeholder="Type your answer here... Be detailed and specific. Use examples where possible."
+                required
+              ></textarea>
+              <div class="char-count" id="charCount">0 characters</div>
+
+              <div class="d-flex justify-content-between align-items-center mt-4">
+                <div class="text-muted small">
+                  <i class="bi bi-lightbulb text-warning me-1"></i>
+                  Tip: Structure your answer clearly. Use examples.
+                </div>
+                <button type="submit" class="btn btn-primary px-5 py-2 rounded-3 fw-semibold" id="nextBtn">
+                  {% if question_num == total_questions %}
+                    <i class="bi bi-check-circle me-2"></i>Submit & Finish
+                  {% else %}
+                    Next Question <i class="bi bi-arrow-right ms-2"></i>
+                  {% endif %}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Warning -->
+        <div class="text-center mt-3">
+          <small class="text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            Do not refresh this page. Your progress will be saved automatically.
+          </small>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Timer
+  let totalSeconds = 180; // 3 minutes
+  const timerEl = document.getElementById('timerDisplay');
+
+  const timerInterval = setInterval(() => {
+    totalSeconds--;
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    timerEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+
+    timerEl.classList.remove('warning', 'danger');
+    if (totalSeconds <= 30) timerEl.classList.add('danger');
+    else if (totalSeconds <= 60) timerEl.classList.add('warning');
+
+    if (totalSeconds <= 0) {
+      clearInterval(timerInterval);
+      timerEl.textContent = '0:00';
+      // Auto-submit when timer runs out
+      document.getElementById('answerForm').submit();
+    }
+  }, 1000);
+
+  // Char count
+  const textarea = document.getElementById('answerText');
+  const charCount = document.getElementById('charCount');
+  textarea.addEventListener('input', () => {
+    charCount.textContent = textarea.value.length + ' characters';
+  });
+
+  // Stop timer on submit
+  document.getElementById('answerForm').addEventListener('submit', () => {
+    clearInterval(timerInterval);
+    const btn = document.getElementById('nextBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+  });
+</script>
+{% endblock %}
