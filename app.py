@@ -1,27 +1,37 @@
-import os
 import json
 import random
 import string
-from datetime import datetime
 from functools import wraps
 
-from flask import (Flask, render_template, request, redirect,
-                   url_for, session, flash, jsonify)
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_mail import Mail, Message
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import Config
 from models import (
-    init_db, get_db,
-    create_user, get_user_by_email, get_user_by_id,
-    verify_user_email, update_user_password,
-    get_all_users, delete_user,
-    save_otp, verify_otp, delete_otp,
-    create_interview, get_interview_by_id,
-    get_interviews_by_user, get_all_interviews,
-    update_interview_status, save_qa, get_qa_by_interview,
-    save_result, get_result_by_interview,
-    get_all_results, get_user_stats, get_user_top_area
+    create_interview,
+    create_user,
+    delete_otp,
+    delete_user,
+    get_all_interviews,
+    get_all_results,
+    get_all_users,
+    get_interview_by_id,
+    get_interviews_by_user,
+    get_qa_by_interview,
+    get_result_by_interview,
+    get_user_by_email,
+    get_user_by_id,
+    get_user_stats,
+    get_user_top_area,
+    init_db,
+    save_otp,
+    save_qa,
+    save_result,
+    update_interview_status,
+    update_user_password,
+    verify_otp,
+    verify_user_email,
 )
 
 app = Flask(__name__)

@@ -54,3 +54,18 @@ python app.py
 
 
 Open `http://127.0.0.1:5000` in your web browser.
+
+
+## Testing & Quality Checks
+
+Run linting with `ruff`:
+```bash
+ruff check .
+```
+
+Run test suite with `pytest`:
+```bash
+pytest -v
+```
+
+Automated linting and test execution runs on all pull requests and pushes to `main` via GitHub Actions (`.github/workflows/ci.yml`).

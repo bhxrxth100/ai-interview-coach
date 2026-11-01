@@ -1,6 +1,7 @@
 import sqlite3
-import os
+
 from config import Config
+
 
 def get_db():
     """Get a database connection."""
