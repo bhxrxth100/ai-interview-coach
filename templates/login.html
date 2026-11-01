@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Login - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-5 col-lg-4">
+        <div class="auth-card">
+          <div class="text-center mb-4">
+            <div class="auth-logo mb-3">
+              <i class="bi bi-box-arrow-in-right"></i>
+            </div>
+            <h2 class="fw-bold">Welcome Back</h2>
+            <p class="text-muted">Sign in to continue your practice</p>
+          </div>
+
+          <form method="POST" novalidate>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Email Address</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+                <input type="email" class="form-control" name="email" placeholder="your@email.com" required />
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <div class="d-flex justify-content-between">
+                <label class="form-label fw-semibold">Password</label>
+                <a href="{{ url_for('forgot_password') }}" class="text-primary small">Forgot password?</a>
+              </div>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
+                <input type="password" class="form-control" name="password" id="loginPassword" placeholder="Your password" required />
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('loginPassword', 'eyeLogin')">
+                  <i class="bi bi-eye" id="eyeLogin"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="d-grid mb-3">
+              <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Login
+              </button>
+            </div>
+          </form>
+
+          <div class="divider-text my-3"><span>or</span></div>
+
+          <div class="alert alert-info rounded-3 small">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Admin?</strong> Login with <code>admin@example.com</code> / <code>admin123</code>
+          </div>
+
+          <div class="text-center text-muted small">
+            Don't have an account?
+            <a href="{{ url_for('register') }}" class="text-primary fw-semibold">Register here</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

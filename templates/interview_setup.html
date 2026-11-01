@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}New Interview - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+
+      <div class="text-center mb-4">
+        <div class="auth-logo mb-3" style="background:rgba(26,115,232,0.1);color:#1a73e8;">
+          <i class="bi bi-play-circle-fill"></i>
+        </div>
+        <h2 class="fw-bold">Set Up Your Interview</h2>
+        <p class="text-muted">Fill in the details below. AI will generate tailored questions for you.</p>
+      </div>
+
+      <div class="content-card">
+        <div class="content-card-body p-4">
+          <form method="POST" id="interviewSetupForm">
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Company Name <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-building text-muted"></i></span>
+                  <input type="text" class="form-control" name="company_name" placeholder="e.g. Google, Infosys..." required />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Job Role <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-briefcase text-muted"></i></span>
+                  <input type="text" class="form-control" name="job_role" placeholder="e.g. Software Engineer..." required />
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label fw-semibold">Job Description</label>
+              <textarea class="form-control" name="job_description" rows="4"
+                placeholder="Paste the job description here. The AI will use this to generate relevant questions... (optional but recommended)"></textarea>
+              <small class="text-muted">More detail = more accurate questions</small>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label fw-semibold">Your Resume / Skills Summary</label>
+              <textarea class="form-control" name="resume_text" rows="4"
+                placeholder="Paste your resume or key skills here. The AI will ask questions based on your background... (optional)"></textarea>
+              <small class="text-muted">Helps AI ask experience-specific questions</small>
+            </div>
+
+            <div class="alert alert-info mt-4 rounded-3">
+              <div class="d-flex gap-3 align-items-start">
+                <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
+                <div>
+                  <strong>What to expect:</strong>
+                  <ul class="mb-0 mt-1 small">
+                    <li>10 questions across Technical, HR, Behavioral, Situational & Project types</li>
+                    <li>3-minute timer per question</li>
+                    <li>AI evaluation with scores and detailed feedback</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-semibold" id="startBtn">
+                <i class="bi bi-stars me-2"></i>Generate Questions & Start Interview
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('interviewSetupForm').addEventListener('submit', function() {
+  const btn = document.getElementById('startBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating AI Questions...';
+});
+</script>
+{% endblock %}

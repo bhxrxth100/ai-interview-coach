@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel - AI Interview Coach{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Admin Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold mb-1"><i class="bi bi-shield-check me-2 text-primary"></i>Admin Panel</h3>
+      <p class="text-muted mb-0">Manage users, interviews, and results</p>
+    </div>
+    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger rounded-3">
+      <i class="bi bi-box-arrow-right me-1"></i>Logout
+    </a>
+  </div>
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+      <div class="stat-card">
+        <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-value">{{ total_users }}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="stat-card">
+        <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-camera-video-fill"></i></div>
+        <div class="stat-value">{{ total_interviews }}</div>
+        <div class="stat-label">Total Interviews</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="stat-card">
+        <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-bar-chart-fill"></i></div>
+        <div class="stat-value">{{ all_results|length }}</div>
+        <div class="stat-label">Total Results</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="stat-card">
+        <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-database-fill"></i></div>
+        <div class="stat-value">SQLite</div>
+        <div class="stat-label">Database</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4" id="adminTabs">
+    <li class="nav-item"><button class="nav-link active fw-semibold" data-bs-toggle="tab" data-bs-target="#usersTab"><i class="bi bi-people me-1"></i>Users</button></li>
+    <li class="nav-item"><button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#interviewsTab"><i class="bi bi-camera-video me-1"></i>Interviews</button></li>
+    <li class="nav-item"><button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#resultsTab"><i class="bi bi-bar-chart me-1"></i>Results</button></li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- Users Tab -->
+    <div class="tab-pane fade show active" id="usersTab">
+      <div class="content-card">
+        <div class="content-card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-3">ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Verified</th>
+                  <th>Joined</th>
+                  <th class="pe-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in users %}
+                <tr>
+                  <td class="ps-3 text-muted small">#{{ user.id }}</td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="avatar-circle" style="width:32px;height:32px;font-size:0.8rem;">{{ user.name[0].upper() }}</div>
+                      <span class="fw-semibold">{{ user.name }}</span>
+                    </div>
+                  </td>
+                  <td class="text-muted small">{{ user.email }}</td>
+                  <td>
+                    <span class="badge {% if user.is_verified %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %} rounded-pill">
+                      {% if user.is_verified %}<i class="bi bi-check-circle me-1"></i>Yes{% else %}<i class="bi bi-x-circle me-1"></i>No{% endif %}
+                    </span>
+                  </td>
+                  <td class="text-muted small">{{ user.created_date[:10] }}</td>
+                  <td class="pe-3">
+                    <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}"
+                          onsubmit="return confirm('Delete user {{ user.name }}? This will also delete all their interviews and results.')">
+                      <button type="submit" class="btn btn-sm btn-outline-danger rounded-2">
+                        <i class="bi bi-trash3"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No users found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interviews Tab -->
+    <div class="tab-pane fade" id="interviewsTab">
+      <div class="content-card">
+        <div class="content-card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-3">ID</th>
+                  <th>User</th>
+                  <th>Company / Role</th>
+                  <th>Score</th>
+                  <th>Status</th>
+                  <th class="pe-3">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for iv in interviews %}
+                <tr>
+                  <td class="ps-3 text-muted small">#{{ iv.id }}</td>
+                  <td>
+                    <div class="small fw-semibold">{{ iv.user_name }}</div>
+                    <small class="text-muted">{{ iv.user_email }}</small>
+                  </td>
+                  <td>
+                    <div class="fw-semibold">{{ iv.company_name }}</div>
+                    <small class="text-muted">{{ iv.job_role }}</small>
+                  </td>
+                  <td>
+                    {% if iv.overall_score %}
+                      <span class="badge rounded-pill {% if iv.overall_score >= 75 %}bg-success{% elif iv.overall_score >= 50 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                        {{ "%.0f"|format(iv.overall_score) }}%
+                      </span>
+                    {% else %}—{% endif %}
+                  </td>
+                  <td>
+                    <span class="badge rounded-pill {% if iv.status == 'completed' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                      {{ iv.status|capitalize }}
+                    </span>
+                  </td>
+                  <td class="pe-3 text-muted small">{{ iv.interview_date[:10] }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No interviews found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Tab -->
+    <div class="tab-pane fade" id="resultsTab">
+      <div class="content-card">
+        <div class="content-card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-3">User</th>
+                  <th>Role</th>
+                  <th>Technical</th>
+                  <th>Communication</th>
+                  <th>Confidence</th>
+                  <th>Overall</th>
+                  <th class="pe-3">Strongest</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in all_results %}
+                <tr>
+                  <td class="ps-3 fw-semibold small">{{ r.user_name }}</td>
+                  <td class="small text-muted">{{ r.job_role }}</td>
+                  <td><span class="badge bg-info-subtle text-info">{{ "%.0f"|format(r.technical_score) }}%</span></td>
+                  <td><span class="badge bg-success-subtle text-success">{{ "%.0f"|format(r.communication_score) }}%</span></td>
+                  <td><span class="badge bg-warning-subtle text-warning">{{ "%.0f"|format(r.confidence_score) }}%</span></td>
+                  <td>
+                    <span class="fw-bold {% if r.overall_score >= 75 %}text-success{% elif r.overall_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                      {{ "%.0f"|format(r.overall_score) }}%
+                    </span>
+                  </td>
+                  <td class="pe-3"><span class="badge bg-primary-subtle text-primary rounded-pill">{{ r.strongest_area }}</span></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center text-muted py-4">No results found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
